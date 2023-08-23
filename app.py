@@ -5,17 +5,21 @@ from wtforms import TextAreaField, FileField, SubmitField
 from wtforms.validators import DataRequired, ValidationError
 import os
 
+from config import UPLOAD_PATH, DOWNLOAD_PATH
+from logger_config import setup_logging
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['UPLOAD_FOLDER'] = 'uploads/'
-app.config['DOWNLOADS_FOLDER'] = 'download/'
-
+app.config['UPLOAD_FOLDER'] = UPLOAD_PATH
+app.config['DOWNLOADS_FOLDER'] = UPLOAD_PATH
 
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
 if not os.path.exists(app.config['DOWNLOADS_FOLDER']):
     os.makedirs(app.config['DOWNLOADS_FOLDER'])
+
+custom_logger = setup_logging()
 
 class FastaForm(FlaskForm):
     sequence = TextAreaField('Enter FASTA Sequence')
