@@ -1,0 +1,23 @@
+# Developing web service templates for the Dundee Resource
+
+The Dundee Resource is a collection of web services for analysing proteins and biological data.
+
+This repository contains templates for developing new web services for the Dundee Resource.
+
+The goal is to provide a simple and consistent way to develop new web services.
+
+## Table of contents
+
+- [Developing web service templates for the Dundee Resource](#developing-web-service-templates-for-the-dundee-resource)
+  - [Table of contents](#table-of-contents)
+  - [Getting started](#getting-started)
+    - [Prerequisites](#prerequisites)
+
+## Getting started
+
+Flask app that submits a FASTA sequence or alignment to the Dundee Resource Slivka API.
+
+### Prerequisites
+
+- Python 3.6+
+- Flask
