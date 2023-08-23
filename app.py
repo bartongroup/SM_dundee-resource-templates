@@ -8,17 +8,17 @@ import uuid
 
 from config import UPLOAD_PATH, DOWNLOAD_PATH
 from logger_config import setup_logging
+from session_db import initialize_db
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['UPLOAD_FOLDER'] = UPLOAD_PATH
 app.config['DOWNLOADS_FOLDER'] = DOWNLOAD_PATH
 
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['DOWNLOADS_FOLDER'], exist_ok=True)
 
-if not os.path.exists(app.config['DOWNLOADS_FOLDER']):
-    os.makedirs(app.config['DOWNLOADS_FOLDER'])
+initialize_db()
 
 custom_logger = setup_logging()
 
