@@ -1,0 +1,27 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FASTA Processor</title>
+</head>
+<body>
+    <h2>Enter or Upload FASTA Sequence</h2>
+    <form action="/" method="post" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.sequence.label }}<br>
+            {{ form.sequence(cols=50, rows=10) }}
+        </p>
+        <p>
+            {{ form.fasta_file.label }}<br>
+            {{ form.fasta_file() }}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+
+    {% if output_file %}
+    <h3>Download Processed File:</h3>
+    <a href="{{ url_for('download', filename=output_file) }}">Download</a>
+    {% endif %}
+</body>
+</html>
