@@ -18,4 +18,10 @@ def initialize_db():
         )
         ''')
 
-# ... (Other database-related functions will go here)
+def insert_metadata(session_id, filename, status, expiration_time):
+    with sqlite3.connect(DATABASE_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+        INSERT INTO file_metadata (session_id, filename, status, expiration_time) 
+        VALUES (?, ?, ?, ?)
+        ''', (session_id, filename, status, expiration_time))

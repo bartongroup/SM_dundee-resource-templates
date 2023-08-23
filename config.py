@@ -11,5 +11,5 @@ DOWNLOAD_PATH = os.environ.get('APP_DOWNLOAD_PATH', DOWNLOAD_PATH)
 DEFAULT_LOG_PATH = os.path.join(BASE_DIR, 'logs')
 LOG_PATH = os.environ.get('APP_LOG_PATH', DEFAULT_LOG_PATH)
 
-DEFAULT_DATABASE_PATH = os.path.join(BASE_DIR, 'db', 'session.db')
+DEFAULT_DATABASE_PATH = os.path.join(BASE_DIR, 'db', 'session.sqlite')
 DATABASE_PATH = os.environ.get('APP_DATABASE_PATH', DEFAULT_DATABASE_PATH)

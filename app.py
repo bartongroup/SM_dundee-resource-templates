@@ -3,12 +3,14 @@ from flask import Flask, render_template, request, send_from_directory
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField, FileField, SubmitField
 from wtforms.validators import DataRequired, ValidationError
+
+import datetime
 import os
 import uuid
 
 from config import UPLOAD_PATH, DOWNLOAD_PATH
 from logger_config import setup_logging
-from session_db import initialize_db
+from session_db import initialize_db, insert_metadata
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -53,6 +55,9 @@ def index():
     output_file = None
 
     if form.validate_on_submit():
+        # Generate a unique session ID using UUID
+        session_id = str(uuid.uuid4())
+
         # Generate a unique filename using UUID
         unique_filename = str(uuid.uuid4()) + '.fasta'
         
@@ -63,6 +68,11 @@ def index():
                 fasta_content = f.read()
         else:
             fasta_content = form.sequence.data
+
+        # Insert metadata into the database
+        status = "uploaded"  # Or "processed" based on your logic.
+        expiration_time = (datetime.datetime.now() + datetime.timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')  # 7 days from now.
+        insert_metadata(session_id, unique_filename, status, expiration_time)
         
         output_content = process_fasta(fasta_content)
         output_file_path = os.path.join(app.config['DOWNLOADS_FOLDER'], unique_filename)
