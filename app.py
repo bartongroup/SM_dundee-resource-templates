@@ -4,6 +4,7 @@ from flask_wtf import FlaskForm
 from wtforms import TextAreaField, FileField, SubmitField
 from wtforms.validators import DataRequired, ValidationError
 import os
+import uuid
 
 from config import UPLOAD_PATH, DOWNLOAD_PATH
 from logger_config import setup_logging
@@ -11,7 +12,7 @@ from logger_config import setup_logging
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['UPLOAD_FOLDER'] = UPLOAD_PATH
-app.config['DOWNLOADS_FOLDER'] = UPLOAD_PATH
+app.config['DOWNLOADS_FOLDER'] = DOWNLOAD_PATH
 
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -52,8 +53,11 @@ def index():
     output_file = None
 
     if form.validate_on_submit():
+        # Generate a unique filename using UUID
+        unique_filename = str(uuid.uuid4()) + '.fasta'
+        
         if form.fasta_file.data:
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], form.fasta_file.data.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
             form.fasta_file.data.save(file_path)
             with open(file_path, 'r') as f:
                 fasta_content = f.read()
@@ -61,11 +65,11 @@ def index():
             fasta_content = form.sequence.data
         
         output_content = process_fasta(fasta_content)
-        output_file_path = os.path.join(app.config['DOWNLOADS_FOLDER'], 'output.fasta')
+        output_file_path = os.path.join(app.config['DOWNLOADS_FOLDER'], unique_filename)
         with open(output_file_path, 'w') as f:
             f.write(output_content)
         
-        output_file = 'output.fasta'
+        output_file = unique_filename
 
     return render_template('index.html', form=form, output_file=output_file)
 
