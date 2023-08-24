@@ -57,29 +57,38 @@ def index():
     if form.validate_on_submit():
         # Generate a unique session ID using UUID
         session_id = str(uuid.uuid4())
-
-        # Generate a unique filename using UUID
-        unique_filename = str(uuid.uuid4()) + '.fasta'
+        session_directory = os.path.join(app.config['UPLOAD_FOLDER'], session_id)
+        os.makedirs(session_directory, exist_ok=True)
         
         if form.fasta_file.data:
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            # Save the uploaded file to the uploads folder
+            fasta_filename = form.fasta_file.data.filename
+            file_path = os.path.join(session_directory, fasta_filename)
             form.fasta_file.data.save(file_path)
             with open(file_path, 'r') as f:
                 fasta_content = f.read()
         else:
+            # Read the sequence and save to a file in the uploads folder
             fasta_content = form.sequence.data
+            fasta_filename = 'sequence.fasta'
+            file_path = os.path.join(session_directory, fasta_filename)
+            with open(file_path, 'w') as f:
+                f.write(form.sequence.data)
 
         # Insert metadata into the database
         status = "uploaded"  # Or "processed" based on your logic.
         expiration_time = (datetime.datetime.now() + datetime.timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')  # 7 days from now.
-        insert_metadata(session_id, unique_filename, status, expiration_time)
+        insert_metadata(session_id, fasta_filename, status, expiration_time)
         
+        # Process the FASTA file and save the output to the downloads folder
         output_content = process_fasta(fasta_content)
-        output_file_path = os.path.join(app.config['DOWNLOADS_FOLDER'], unique_filename)
+        output_directory = os.path.join(app.config['DOWNLOADS_FOLDER'], session_id)
+        os.makedirs(output_directory, exist_ok=True)  # Create the session-specific directory if it doesn't exist.
+        output_file_path = os.path.join(output_directory, 'output.fasta')
         with open(output_file_path, 'w') as f:
             f.write(output_content)
         
-        output_file = unique_filename
+        output_file = fasta_filename
 
     return render_template('index.html', form=form, output_file=output_file)
 
