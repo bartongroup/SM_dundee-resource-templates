@@ -1,5 +1,4 @@
 *.pyc
-uploads/
-download/
+sessions/
 logs/
 db/
