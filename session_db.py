@@ -34,3 +34,14 @@ def update_status(session_id, filename, status):
         SET status = ? 
         WHERE session_id = ? AND filename = ?
         ''', (status, session_id, filename))
+
+def fetch_results(session_id):
+    with sqlite3.connect(DATABASE_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+        SELECT filename, submission_time, status, expiration_time 
+        FROM file_metadata 
+        WHERE session_id = ?
+        ''', (session_id,))
+        results = cursor.fetchall()
+    return results

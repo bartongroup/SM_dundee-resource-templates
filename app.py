@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, render_template, request, send_from_directory, session, redirect, url_for
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField, FileField, SubmitField
 from wtforms.validators import DataRequired, ValidationError
@@ -10,7 +10,7 @@ import uuid
 
 from config import SESSIONS_FOLDER
 from logger_config import setup_logging
-from session_db import initialize_db, insert_metadata, update_status
+from session_db import initialize_db, insert_metadata, update_status, fetch_results
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -49,12 +49,17 @@ def process_fasta(fasta_content):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    # Check if session_id exists, create one if not
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+    
+    session_id = session['session_id']
+
     form = FastaForm()
     output_file = None
 
     if form.validate_on_submit():
         # Generate a unique session ID using UUID
-        session_id = str(uuid.uuid4())
         session_directory = os.path.join(app.config['SESSIONS_FOLDER'], session_id)
         os.makedirs(session_directory, exist_ok=True)
         
@@ -90,11 +95,23 @@ def index():
         
         output_file = fasta_filename
 
+        # Redirect to the results page after processing
+        return redirect(url_for('results'))
+    
     return render_template('index.html', form=form, output_file=output_file)
 
-@app.route('/download/<filename>')
-def download(filename):
-    return send_from_directory(app.config['SESSIONS_FOLDER'], filename, as_attachment=True)
+@app.route('/download/<session_id>/<filename>')
+def download(session_id, filename):
+    file_path = os.path.join(app.config['SESSIONS_FOLDER'], session_id, filename)
+    return send_from_directory(directory=os.path.dirname(file_path), filename=os.path.basename(file_path), as_attachment=True)
+
+@app.route('/results', methods=['GET'])
+def results():
+    # Fetch results based on the current session ID
+    results = fetch_results(session['session_id'])
+
+    # Render the results page
+    return render_template('results.html', results=results)
 
 if __name__ == '__main__':
     app.run(debug=True)
