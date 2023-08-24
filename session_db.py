@@ -43,5 +43,8 @@ def fetch_results(session_id):
         FROM file_metadata 
         WHERE session_id = ?
         ''', (session_id,))
-        results = cursor.fetchall()
+        columns = [column[0] for column in cursor.description]
+        results = []
+        for row in cursor.fetchall():
+            results.append(dict(zip(columns, row)))
     return results

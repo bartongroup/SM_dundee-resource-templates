@@ -18,12 +18,13 @@
         <tbody>
             {% for result in results %}
             <tr>
-                <td><a href="{{ url_for('download', session_id=session_id, filename=result[0]) }}">{{ result[0] }}</a></td>
-                <td>{{ result[1] }}</td>
-                <td>{{ result[2] }}</td>
-                <td>{{ result[3] }}</td>
+                <td><a href="{{ url_for('download', session_id=session_id, filename=result.filename) }}">{{ result.filename }}</a></td>
+                <td>{{ result.submission_time }}</td>
+                <td>{{ result.status }}</td>
+                <td>{{ result.expiration_time }}</td>
+                <!-- Add other fields as necessary -->
             </tr>
-            {% endfor %}            
+        {% endfor %}           
         </tbody>
     </table>
 </body>
