@@ -10,7 +10,7 @@ import uuid
 
 from config import SESSIONS_FOLDER
 from logger_config import setup_logging
-from session_db import initialize_db, insert_metadata
+from session_db import initialize_db, insert_metadata, update_status
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -84,6 +84,9 @@ def index():
         output_file_path = os.path.join(session_directory, 'output.fasta')
         with open(output_file_path, 'w') as f:
             f.write(output_content)
+
+        # Update the status in the database
+        update_status(session_id, fasta_filename, "processed")
         
         output_file = fasta_filename
 

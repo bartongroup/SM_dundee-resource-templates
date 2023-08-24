@@ -25,3 +25,12 @@ def insert_metadata(session_id, filename, status, expiration_time):
         INSERT INTO file_metadata (session_id, filename, status, expiration_time) 
         VALUES (?, ?, ?, ?)
         ''', (session_id, filename, status, expiration_time))
+
+def update_status(session_id, filename, status):
+    with sqlite3.connect(DATABASE_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+        UPDATE file_metadata 
+        SET status = ? 
+        WHERE session_id = ? AND filename = ?
+        ''', (status, session_id, filename))
