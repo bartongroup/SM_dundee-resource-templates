@@ -11,7 +11,10 @@
             <div class="alert alert-info" role="alert">
                 You can access your results later using this unique URL: 
                 <a href="{{ request.url }}" id="uniqueURL" class="text-dark fw-bold text-decoration-none">{{ request.url }}</a>
-                <button id="copyButton" class="btn btn-secondary btn-sm ml-2">Copy</button>
+                <button id="copyButton" class="btn btn-outline-secondary btn-sm" title="Copy to clipboard">
+                    <i id="clipboardIcon" class="bi bi-clipboard"></i>
+                    <i id="checkIcon" class="bi bi-check2" style="display: none;"></i>
+                </button>
             </div>
 
             <h2 class="mb-4">Your Results</h2>
@@ -47,7 +50,7 @@
 </div>
 <script>
     document.getElementById('copyButton').addEventListener('click', function () {
-        // Create a textarea element to copy the text
+        // Copy to clipboard logic
         var textArea = document.createElement("textarea");
         textArea.value = document.getElementById('uniqueURL').href;
         document.body.appendChild(textArea);
@@ -55,8 +58,18 @@
         document.execCommand('copy');
         document.body.removeChild(textArea);
 
-        // Provide feedback to the user (Optional)
-        alert('URL copied to clipboard!');
+        // Toggle icons
+        var clipboardIcon = document.getElementById('clipboardIcon');
+        var checkIcon = document.getElementById('checkIcon');
+
+        clipboardIcon.style.display = 'none';
+        checkIcon.style.display = 'inline';
+
+        // After a delay, revert the icons
+        setTimeout(function () {
+            clipboardIcon.style.display = 'inline';
+            checkIcon.style.display = 'none';
+        }, 2000);  // The icon will revert back after 2 seconds
     });
 </script>
 {% endblock %}
