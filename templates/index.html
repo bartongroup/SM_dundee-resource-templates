@@ -3,40 +3,40 @@
 {% block title %}FASTA Processor - Home{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        FASTA Processor
-                    </div>
-                    <div class="card-body">
-                        <form action="/" method="post" enctype="multipart/form-data" id="fastaForm">
-                            {{ form.hidden_tag() }}
-                            <div class="mb-3">
-                                {{ form.sequence.label(class="form-label") }}
-                                {{ form.sequence(class="form-control", rows=5) }}
-                            </div>
-                            <div class="mb-3">
-                                {{ form.fasta_file.label(class="form-label") }}
-                                {{ form.fasta_file(class="form-control") }}
-                            </div>
-                            <div class="mb-3">
-                                <button type="submit" class="btn btn-primary" id="submitButton">Submit</button>
-                            </div>
-                        </form>
-                    </div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    FASTA Processor
+                </div>
+                <div class="card-body">
+                    <form action="/" method="post" enctype="multipart/form-data" id="fastaForm">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.sequence.label(class="form-label") }}
+                            {{ form.sequence(class="form-control", rows=5) }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.fasta_file.label(class="form-label") }}
+                            {{ form.fasta_file(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary" id="submitButton">Submit</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- JavaScript for button feedback -->
-    <script>
-        $(document).ready(function() {
-            $("#fastaForm").submit(function(event) {
-                $("#submitButton").text("Processing...").prop("disabled", true);
-            });
+<!-- JavaScript for button feedback -->
+<script>
+    $(document).ready(function () {
+        $("#fastaForm").submit(function (event) {
+            $("#submitButton").text("Processing...").prop("disabled", true);
         });
-    </script>
+    });
+</script>
 {% endblock %}

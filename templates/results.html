@@ -3,43 +3,45 @@
 {% block title %}FASTA Processor - Results{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                
-                <!-- Results URL Notice -->
-                <div class="alert alert-info" role="alert">
-                    You can access your results later using this unique URL: 
-                    <a href="{{ request.url }}" class="text-dark fw-bold text-decoration-none">{{ request.url }}</a>
-                </div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
 
-                <h2 class="mb-4">Your Results</h2>
-                <div class="card">
-                    <div class="card-body">
-                        <table class="table table-bordered table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Filename</th>
-                                    <th>Submission Time</th>
-                                    <th>Status</th>
-                                    <th>Expiration Time</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for result in results %}
-                                <tr>
-                                    <td><a href="{{ url_for('download', session_id=session_id, filename=result.filename) }}">{{ result.filename }}</a></td>
-                                    <td>{{ result.submission_time }}</td>
-                                    <td>{{ result.status }}</td>
-                                    <td>{{ result.expiration_time }}</td>
-                                    <!-- Add other fields as necessary -->
-                                </tr>
-                                {% endfor %}           
-                            </tbody>
-                        </table>
-                    </div>
+            <!-- Results URL Notice -->
+            <div class="alert alert-info" role="alert">
+                You can access your results later using this unique URL:
+                <a href="{{ request.url }}" class="text-dark fw-bold text-decoration-none">{{ request.url }}</a>
+            </div>
+
+            <h2 class="mb-4">Your Results</h2>
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Filename</th>
+                                <th>Submission Time</th>
+                                <th>Status</th>
+                                <th>Expiration Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                <td><a
+                                        href="{{ url_for('download', session_id=session_id, filename=result.filename) }}">{{
+                                        result.filename }}</a></td>
+                                <td>{{ result.submission_time }}</td>
+                                <td>{{ result.status }}</td>
+                                <td>{{ result.expiration_time }}</td>
+                                <!-- Add other fields as necessary -->
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+</div>
 {% endblock %}
