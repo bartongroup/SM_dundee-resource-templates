@@ -9,8 +9,9 @@
 
             <!-- Results URL Notice -->
             <div class="alert alert-info" role="alert">
-                You can access your results later using this unique URL:
-                <a href="{{ request.url }}" class="text-dark fw-bold text-decoration-none">{{ request.url }}</a>
+                You can access your results later using this unique URL: 
+                <a href="{{ request.url }}" id="uniqueURL" class="text-dark fw-bold text-decoration-none">{{ request.url }}</a>
+                <button id="copyButton" class="btn btn-secondary btn-sm ml-2">Copy</button>
             </div>
 
             <h2 class="mb-4">Your Results</h2>
@@ -44,4 +45,18 @@
         </div>
     </div>
 </div>
+<script>
+    document.getElementById('copyButton').addEventListener('click', function () {
+        // Create a textarea element to copy the text
+        var textArea = document.createElement("textarea");
+        textArea.value = document.getElementById('uniqueURL').href;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        // Provide feedback to the user (Optional)
+        alert('URL copied to clipboard!');
+    });
+</script>
 {% endblock %}
