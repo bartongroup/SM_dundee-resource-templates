@@ -6,6 +6,7 @@ from wtforms.validators import DataRequired, ValidationError
 
 import datetime
 import os
+import time
 import uuid
 
 from config import SESSIONS_FOLDER
@@ -45,6 +46,9 @@ class FastaForm(FlaskForm):
 
 def process_fasta(fasta_content):
     # Dummy function: you can replace this with any processing function you need
+    delay = 5
+    custom_logger.info(f"Processing FASTA file. This will take {delay} seconds.")
+    time.sleep(delay)
     return fasta_content.lower()
 
 @app.route('/', methods=['GET', 'POST'])
