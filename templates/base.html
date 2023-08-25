@@ -22,9 +22,13 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" aria-current="page" href="{{ url_for('index') }}">Home</a>
                     </li>
+                    {% if session.get('session_id') %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'results' %}active{% endif %}" href="{{ url_for('results') }}">Results</a>
+                        <a class="nav-link {% if request.endpoint == 'results' %}active{% endif %}"
+                            href="{{ url_for('results', session_id=session['session_id']) }}">Results</a>
                     </li>
+                    {% endif %}
+
                 </ul>
             </div>
         </div>

@@ -100,7 +100,7 @@ def index():
         output_file = fasta_filename
 
         # Redirect to the results page after processing
-        return redirect(url_for('results'))
+        return redirect(url_for('results', session_id=session_id))
     
     return render_template('index.html', form=form, output_file=output_file)
 
@@ -109,13 +109,12 @@ def download(session_id, filename):
     directory = os.path.join(app.config['SESSIONS_FOLDER'], session_id)
     return send_from_directory(directory=directory, path=filename, as_attachment=True)
 
-@app.route('/results', methods=['GET'])
-def results():
-    # Fetch results based on the current session ID
-    results = fetch_results(session['session_id'])
+@app.route('/results/<session_id>', methods=['GET'])
+def results(session_id):
+    # Fetch results based on the session ID
+    results = fetch_results(session_id)
+    return render_template('results.html', results=results, session_id=session_id)
 
-    # Render the results page
-    return render_template('results.html', results=results, session_id=session['session_id'])
 
 if __name__ == '__main__':
     app.run(debug=True)
