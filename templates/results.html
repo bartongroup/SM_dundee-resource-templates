@@ -24,6 +24,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Filename</th>
+                                <th>Results</th>
                                 <th>Submission Time</th>
                                 <th>Status</th>
                                 <th>Expiration Time</th>
@@ -35,6 +36,9 @@
                                 <td><a
                                         href="{{ url_for('download', session_id=session_id, filename=result.filename) }}">{{
                                         result.filename }}</a></td>
+                                <td><a
+                                    href="{{ url_for('download', session_id=session_id, filename=result.results) }}">{{
+                                    result.results }}</a></td>
                                 <td>{{ result.submission_time }}</td>
                                 <td>{{ result.status }}</td>
                                 <td>{{ result.expiration_time }}</td>

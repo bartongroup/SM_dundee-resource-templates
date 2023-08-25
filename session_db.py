@@ -12,19 +12,20 @@ def initialize_db():
             id INTEGER PRIMARY KEY,
             session_id TEXT NOT NULL,
             filename TEXT NOT NULL,
+            results TEXT NOT NULL,
             submission_time DATETIME DEFAULT CURRENT_TIMESTAMP,
             status TEXT NOT NULL,
             expiration_time DATETIME
         )
         ''')
 
-def insert_metadata(session_id, filename, status, expiration_time):
+def insert_metadata(session_id, filename, results, status, expiration_time):
     with sqlite3.connect(DATABASE_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute('''
-        INSERT INTO file_metadata (session_id, filename, status, expiration_time) 
-        VALUES (?, ?, ?, ?)
-        ''', (session_id, filename, status, expiration_time))
+        INSERT INTO file_metadata (session_id, filename, results, status, expiration_time) 
+        VALUES (?, ?, ?, ?, ?)
+        ''', (session_id, filename, results, status, expiration_time))
 
 def update_status(session_id, filename, status):
     with sqlite3.connect(DATABASE_PATH) as conn:
@@ -39,7 +40,7 @@ def fetch_results(session_id):
     with sqlite3.connect(DATABASE_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute('''
-        SELECT filename, submission_time, status, expiration_time 
+        SELECT filename, results, submission_time, status, expiration_time 
         FROM file_metadata 
         WHERE session_id = ?
         ''', (session_id,))

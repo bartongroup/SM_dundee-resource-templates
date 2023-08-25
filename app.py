@@ -82,7 +82,8 @@ def index():
         # Insert metadata into the database
         status = "uploaded"  # Or "processed" based on your logic.
         expiration_time = (datetime.datetime.now() + datetime.timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')  # 7 days from now.
-        insert_metadata(session_id, fasta_filename, status, expiration_time)
+        results_filename = 'output.fasta'
+        insert_metadata(session_id, fasta_filename, results_filename, status, expiration_time)
 
         # Read the FASTA file
         with open(file_path, 'r') as f:
@@ -90,7 +91,7 @@ def index():
         
         # Process the FASTA file and save the output to the downloads folder
         output_content = process_fasta(fasta_content)
-        output_file_path = os.path.join(session_directory, 'output.fasta')
+        output_file_path = os.path.join(session_directory, results_filename)
         with open(output_file_path, 'w') as f:
             f.write(output_content)
 
