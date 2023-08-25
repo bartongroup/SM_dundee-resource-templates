@@ -102,8 +102,8 @@ def index():
 
 @app.route('/download/<session_id>/<filename>')
 def download(session_id, filename):
-    file_path = os.path.join(app.config['SESSIONS_FOLDER'], session_id, filename)
-    return send_from_directory(directory=os.path.dirname(file_path), filename=os.path.basename(file_path), as_attachment=True)
+    directory = os.path.join(app.config['SESSIONS_FOLDER'], session_id)
+    return send_from_directory(directory=directory, path=filename, as_attachment=True)
 
 @app.route('/results', methods=['GET'])
 def results():
@@ -111,7 +111,7 @@ def results():
     results = fetch_results(session['session_id'])
 
     # Render the results page
-    return render_template('results.html', results=results)
+    return render_template('results.html', results=results, session_id=session['session_id'])
 
 if __name__ == '__main__':
     app.run(debug=True)
