@@ -1,3 +1,11 @@
 #clipboardIcon, #checkIcon {
     transition: opacity 0.3s;
 }
+
+.table-danger {
+    background-color: #f5c6cb;  /* light red */
+}
+
+.table-warning {
+    background-color: #ffeeba;  /* light yellow */
+}

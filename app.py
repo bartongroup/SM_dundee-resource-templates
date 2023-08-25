@@ -4,12 +4,13 @@ from flask_wtf import FlaskForm
 from wtforms import TextAreaField, FileField, SubmitField
 from wtforms.validators import DataRequired, ValidationError
 
-import datetime
 import os
 import time
 import uuid
+from datetime import datetime, timedelta
 
 from config import SESSIONS_FOLDER
+from filters import datetime_filter
 from logger_config import setup_logging
 from session_db import initialize_db, insert_metadata, update_status, fetch_results
 
@@ -22,6 +23,9 @@ os.makedirs(app.config['SESSIONS_FOLDER'], exist_ok=True)
 initialize_db()
 
 custom_logger = setup_logging()
+
+# Register the filters
+app.jinja_env.filters['datetime'] = datetime_filter
 
 class FastaForm(FlaskForm):
     sequence = TextAreaField('Enter FASTA Sequence')
@@ -81,7 +85,7 @@ def index():
 
         # Insert metadata into the database
         status = "uploaded"  # Or "processed" based on your logic.
-        expiration_time = (datetime.datetime.now() + datetime.timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')  # 7 days from now.
+        expiration_time = (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')  # 7 days from now.
         results_filename = 'output.fasta'
         insert_metadata(session_id, fasta_filename, results_filename, status, expiration_time)
 
@@ -114,7 +118,8 @@ def download(session_id, filename):
 def results(session_id):
     # Fetch results based on the session ID
     results = fetch_results(session_id)
-    return render_template('results.html', results=results, session_id=session_id)
+    return render_template('results.html', results=results, session_id=session_id,
+                           current_time=datetime.now(), timedelta_24h=timedelta(days=1))
 
 
 if __name__ == '__main__':
