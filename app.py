@@ -1,7 +1,5 @@
 
 from flask import Flask, render_template, request, send_from_directory, session, redirect, url_for
-from flask_wtf import FlaskForm
-from wtforms import TextAreaField, FileField, SubmitField
 from wtforms.validators import DataRequired, ValidationError
 
 import os
@@ -11,6 +9,7 @@ from datetime import datetime, timedelta
 
 from config import SESSIONS_FOLDER
 from filters import datetime_filter
+from forms import FastaForm
 from logger_config import setup_logging
 from session_db import initialize_db, insert_metadata, update_status, fetch_results
 
@@ -26,27 +25,6 @@ custom_logger = setup_logging()
 
 # Register the filters
 app.jinja_env.filters['datetime'] = datetime_filter
-
-class FastaForm(FlaskForm):
-    sequence = TextAreaField('Enter FASTA Sequence')
-    fasta_file = FileField('Or Upload a FASTA File')
-    submit = SubmitField('Submit')
-
-    # Custom validator
-    def validate(self, extra_validators=None):
-        # Use the default validate method first
-        initial_validation = super(FastaForm, self).validate(extra_validators=extra_validators)
-        
-        # If the initial validation passes and either sequence or fasta_file has data, return True
-        if initial_validation and (self.sequence.data or self.fasta_file.data):
-            return True
-        
-        # If neither field has data, add a form-wide error
-        if not self.sequence.data and not self.fasta_file.data:
-            self.sequence.errors.append('Either enter a FASTA sequence or upload a FASTA file.')
-            return False
-        
-        return False
 
 def process_fasta(fasta_content):
     # Dummy function: you can replace this with any processing function you need
