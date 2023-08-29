@@ -3,7 +3,6 @@ from flask import Flask, render_template, request, send_from_directory, session,
 from wtforms.validators import DataRequired, ValidationError
 
 import os
-import time
 import uuid
 from datetime import datetime, timedelta
 
@@ -12,12 +11,12 @@ from filters import datetime_filter
 from forms import FastaForm
 from logger_config import setup_logging
 from session_db import initialize_db, insert_metadata, update_status, fetch_results
+from submission import SubmissionHandler
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['SESSIONS_FOLDER'] = SESSIONS_FOLDER
 
-os.makedirs(app.config['SESSIONS_FOLDER'], exist_ok=True)
+os.makedirs(SESSIONS_FOLDER, exist_ok=True)
 
 initialize_db()
 
@@ -25,13 +24,6 @@ custom_logger = setup_logging()
 
 # Register the filters
 app.jinja_env.filters['datetime'] = datetime_filter
-
-def process_fasta(fasta_content):
-    # Dummy function: you can replace this with any processing function you need
-    delay = 5
-    custom_logger.info(f"Processing FASTA file. This will take {delay} seconds.")
-    time.sleep(delay)
-    return fasta_content.lower()
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -42,44 +34,11 @@ def index():
     session_id = session['session_id']
 
     form = FastaForm()
+    submission_handler = SubmissionHandler(session_id, form)
     output_file = None
 
     if form.validate_on_submit():
-        # Generate a unique session ID using UUID
-        session_directory = os.path.join(app.config['SESSIONS_FOLDER'], session_id)
-        os.makedirs(session_directory, exist_ok=True)
-        
-        if form.fasta_file.data:
-            # Save the uploaded file to the session folder
-            fasta_filename = form.fasta_file.data.filename
-            file_path = os.path.join(session_directory, fasta_filename)
-            form.fasta_file.data.save(file_path)
-        else:
-            # Save the sequence input to a file in the session folder
-            fasta_filename = 'sequence.fasta'
-            file_path = os.path.join(session_directory, fasta_filename)
-            with open(file_path, 'w') as f:
-                f.write(form.sequence.data)
-
-        # Insert metadata into the database
-        status = "uploaded"  # Or "processed" based on your logic.
-        expiration_time = (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')  # 7 days from now.
-        results_filename = 'output.fasta'
-        insert_metadata(session_id, fasta_filename, results_filename, status, expiration_time)
-
-        # Read the FASTA file
-        with open(file_path, 'r') as f:
-            fasta_content = f.read()
-        
-        # Process the FASTA file and save the output to the downloads folder
-        output_content = process_fasta(fasta_content)
-        output_file_path = os.path.join(session_directory, results_filename)
-        with open(output_file_path, 'w') as f:
-            f.write(output_content)
-
-        # Update the status in the database
-        update_status(session_id, fasta_filename, "processed")
-        
+        fasta_filename = submission_handler.handle_submission()
         output_file = fasta_filename
 
         # Redirect to the results page after processing
@@ -89,7 +48,7 @@ def index():
 
 @app.route('/download/<session_id>/<filename>')
 def download(session_id, filename):
-    directory = os.path.join(app.config['SESSIONS_FOLDER'], session_id)
+    directory = os.path.join(SESSIONS_FOLDER, session_id)
     return send_from_directory(directory=directory, path=filename, as_attachment=True)
 
 @app.route('/results/<session_id>', methods=['GET'])
