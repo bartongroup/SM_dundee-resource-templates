@@ -7,7 +7,7 @@ from config import SESSIONS_FOLDER
 from logger_config import setup_logging
 from session_db import insert_metadata, update_status
 
-custom_logger = setup_logging()
+custom_logger = setup_logging(name='submission')
 
 class SubmissionHandler:
 

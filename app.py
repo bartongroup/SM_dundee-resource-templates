@@ -20,7 +20,7 @@ os.makedirs(SESSIONS_FOLDER, exist_ok=True)
 
 initialize_db()
 
-custom_logger = setup_logging()
+custom_logger = setup_logging(name='app')
 
 # Register the filters
 app.jinja_env.filters['datetime'] = datetime_filter
