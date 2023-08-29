@@ -66,10 +66,10 @@ class SubmissionHandler:
 
     def process_and_save_results(self, fasta_content):
         """Process the FASTA file content and save the results."""
-        output_content = process_fasta(fasta_content)
+        processor = FastaProcessor()
         output_file_path = os.path.join(self.session_directory, 'output.fasta')
-        with open(output_file_path, 'w') as f:
-            f.write(output_content)
+        success = processor.process(self.file_path, output_file_path)
+
 
     def update_db_status(self):
         """Update the processing status in the database."""
@@ -104,9 +104,35 @@ class SubmissionHandler:
         return result
 
 
-def process_fasta(fasta_content):
-    # Dummy function: you can replace this with any processing function you need
-    delay = 5
-    custom_logger.info(f"Processing FASTA file. This will take {delay} seconds.")
-    sleep(delay)
-    return fasta_content.lower()
+class FastaProcessor:
+    """Handles the processing of FASTA files."""
+
+    @staticmethod
+    def process(input_file_path, output_file_path):
+        """Process the given FASTA file.
+
+        Args:
+            input_file_path (str): The path to the input FASTA file.
+            output_file_path (str): The path where the output should be saved.
+
+        Returns:
+            bool: True if processing was successful, False otherwise.
+        """
+        try:
+            # Dummy function: Replace this with your actual processing logic
+            delay = 5
+            custom_logger.info(f"Processing FASTA file. This will take {delay} seconds.")
+            sleep(delay)
+
+            with open(input_file_path, 'r') as infile:
+                content = infile.read()
+
+            processed_content = content.lower()
+
+            with open(output_file_path, 'w') as outfile:
+                outfile.write(processed_content)
+            
+            return True
+        except Exception as e:
+            custom_logger.error(f"An error occurred while processing the FASTA file: {str(e)}")
+            return False
