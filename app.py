@@ -38,8 +38,8 @@ def index():
     output_file = None
 
     if form.validate_on_submit():
-        fasta_filename = submission_handler.handle_submission()
-        output_file = fasta_filename
+        result = submission_handler.handle_submission()
+        output_file = result['filename']
 
         # Redirect to the results page after processing
         return redirect(url_for('results', session_id=session_id))

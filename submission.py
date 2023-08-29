@@ -20,42 +20,53 @@ class SubmissionHandler:
         session_directory = os.path.join(SESSIONS_FOLDER, self.session_id)
         os.makedirs(session_directory, exist_ok=True)
         self.session_directory = session_directory
-
-    def handle_submission(self):
+        custom_logger.debug(f"Directory created for session {self.session_id}.")
         
+    def handle_submission(self):
         self.create_directory()
+        
+        result = {'status': 'failed', 'message': '', 'filename': None}
+        
+        try:
+            if self.form.fasta_file.data:
+                fasta_filename = self.form.fasta_file.data.filename
+                file_path = os.path.join(self.session_directory, fasta_filename)
+                self.form.fasta_file.data.save(file_path)
+                custom_logger.info(f"FASTA file uploaded for session {self.session_id}.")
+            else:
+                fasta_filename = 'sequence.fasta'
+                file_path = os.path.join(self.session_directory, fasta_filename)
+                with open(file_path, 'w') as f:
+                    f.write(self.form.sequence.data)
+                custom_logger.info(f"Sequence data saved for session {self.session_id}.")
 
-        if self.form.fasta_file.data:
-            # Save the uploaded file to the session folder
-            fasta_filename = self.form.fasta_file.data.filename
-            file_path = os.path.join(self.session_directory, fasta_filename)
-            self.form.fasta_file.data.save(file_path)
-        else:
-            # Save the sequence input to a file in the session folder
-            fasta_filename = 'sequence.fasta'
-            file_path = os.path.join(self.session_directory, fasta_filename)
-            with open(file_path, 'w') as f:
-                f.write(self.form.sequence.data)
+            insert_metadata(self.session_id, fasta_filename, 'output.fasta', 'uploaded', 
+                            (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S'))
+            custom_logger.info(f"Metadata inserted into database for session {self.session_id}.")
 
-        # Insert metadata into the database
-        status = "uploaded"  # Or "processed" based on your logic.
-        expiration_time = (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')  # 7 days from now.
-        results_filename = 'output.fasta'
-        insert_metadata(self.session_id, fasta_filename, results_filename, status, expiration_time)
+            with open(file_path, 'r') as f:
+                fasta_content = f.read()
 
-        # Read the FASTA file
-        with open(file_path, 'r') as f:
-            fasta_content = f.read()
+            output_content = process_fasta(fasta_content)
+            output_file_path = os.path.join(self.session_directory, 'output.fasta')
             
-        # Process the FASTA file and save the output to the downloads folder
-        output_content = process_fasta(fasta_content)
-        output_file_path = os.path.join(self.session_directory, results_filename)
-        with open(output_file_path, 'w') as f:
-            f.write(output_content)
+            with open(output_file_path, 'w') as f:
+                f.write(output_content)
+            
+            update_status(self.session_id, fasta_filename, "processed")
+            custom_logger.info(f"FASTA file processed and status updated for session {self.session_id}.")
 
-        # Update the status in the database
-        update_status(self.session_id, fasta_filename, "processed")
-        return fasta_filename
+            result['status'] = 'success'
+            result['message'] = 'File processed successfully.'
+            result['directory'] = self.session_directory
+            result['filename'] = fasta_filename
+            
+        except Exception as e:
+            custom_logger.error(f"An error occurred while handling submission for session {self.session_id}: {str(e)}")
+            result['status'] = 'failed'
+            result['message'] = str(e)
+        
+        return result
 
 
 def process_fasta(fasta_content):
