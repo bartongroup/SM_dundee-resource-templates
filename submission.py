@@ -14,48 +14,65 @@ class SubmissionHandler:
     def __init__(self, session_id, form):
         self.session_id = session_id
         self.form = form
+        self.session_directory = self.create_directory()
     
     def create_directory(self):
         # Create a directory for the submission
         session_directory = os.path.join(SESSIONS_FOLDER, self.session_id)
         os.makedirs(session_directory, exist_ok=True)
-        self.session_directory = session_directory
         custom_logger.debug(f"Directory created for session {self.session_id}.")
-        
-    def handle_submission(self):
-        self.create_directory()
-        
+        return session_directory
+    
+    def save_fasta_file(self):
+        if self.form.fasta_file.data:
+            fasta_filename = self.form.fasta_file.data.filename
+            file_path = os.path.join(self.session_directory, fasta_filename)
+            self.form.fasta_file.data.save(file_path)
+            custom_logger.info(f"FASTA file uploaded for session {self.session_id}.")
+        else:
+            fasta_filename = 'sequence.fasta'
+            file_path = os.path.join(self.session_directory, fasta_filename)
+            with open(file_path, 'w') as f:
+                f.write(self.form.sequence.data)
+            custom_logger.info(f"Sequence data saved for session {self.session_id}.")
+        return fasta_filename, file_path
+
+    def insert_db_metadata(self, fasta_filename):
+        insert_metadata(self.session_id, fasta_filename, 'output.fasta', 'uploaded', 
+                            (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S'))
+        custom_logger.info(f"Metadata inserted into database for session {self.session_id}.")
+
+    def read_fasta_file(self, file_path):
+        with open(file_path, 'r') as f:
+            fasta_content = f.read()
+        return fasta_content
+
+    def process_and_save_results(self, fasta_content):
+        output_content = process_fasta(fasta_content)
+        output_file_path = os.path.join(self.session_directory, 'output.fasta')
+            
+        with open(output_file_path, 'w') as f:
+            f.write(output_content)
+
+    def update_db_status(self, fasta_filename):
+        update_status(self.session_id, fasta_filename, "processed")
+        custom_logger.info(f"FASTA file processed and status updated for session {self.session_id}.")
+
+    def handle_submission(self):        
         result = {'status': 'failed', 'message': '', 'filename': None}
         
         try:
-            if self.form.fasta_file.data:
-                fasta_filename = self.form.fasta_file.data.filename
-                file_path = os.path.join(self.session_directory, fasta_filename)
-                self.form.fasta_file.data.save(file_path)
-                custom_logger.info(f"FASTA file uploaded for session {self.session_id}.")
-            else:
-                fasta_filename = 'sequence.fasta'
-                file_path = os.path.join(self.session_directory, fasta_filename)
-                with open(file_path, 'w') as f:
-                    f.write(self.form.sequence.data)
-                custom_logger.info(f"Sequence data saved for session {self.session_id}.")
+            fasta_filename, file_path = self.save_fasta_file()
 
-            insert_metadata(self.session_id, fasta_filename, 'output.fasta', 'uploaded', 
-                            (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S'))
-            custom_logger.info(f"Metadata inserted into database for session {self.session_id}.")
+            self.insert_db_metadata(fasta_filename)
 
-            with open(file_path, 'r') as f:
-                fasta_content = f.read()
+            fasta_content = self.read_fasta_file(file_path)
 
-            output_content = process_fasta(fasta_content)
-            output_file_path = os.path.join(self.session_directory, 'output.fasta')
+            self.process_and_save_results(fasta_content)
             
-            with open(output_file_path, 'w') as f:
-                f.write(output_content)
-            
-            update_status(self.session_id, fasta_filename, "processed")
-            custom_logger.info(f"FASTA file processed and status updated for session {self.session_id}.")
+            self.update_db_status(fasta_filename)
 
+            # Return the result
             result['status'] = 'success'
             result['message'] = 'File processed successfully.'
             result['directory'] = self.session_directory
