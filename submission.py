@@ -120,7 +120,7 @@ class FastaProcessor:
         """
         try:
             # Dummy function: Replace this with your actual processing logic
-            delay = 5
+            delay = 0
             custom_logger.info(f"Processing FASTA file. This will take {delay} seconds.")
             sleep(delay)
 
