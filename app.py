@@ -7,10 +7,10 @@ import uuid
 from datetime import datetime, timedelta
 
 from config import SESSIONS_FOLDER
-from filters import datetime_filter
+from filters import datetime_parse, datetime_format
 from forms import FastaForm
 from logger_config import setup_logging
-from session_db import initialize_db, insert_metadata, update_status, fetch_results
+from session_db import initialize_db, fetch_results
 from submission import SubmissionHandler
 
 app = Flask(__name__)
@@ -23,7 +23,8 @@ initialize_db()
 custom_logger = setup_logging(name='app')
 
 # Register the filters
-app.jinja_env.filters['datetime'] = datetime_filter
+app.jinja_env.filters['datetime_parse'] = datetime_parse
+app.jinja_env.filters['datetime_format'] = datetime_format
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -34,10 +35,10 @@ def index():
     session_id = session['session_id']
 
     form = FastaForm()
-    submission_handler = SubmissionHandler(session_id, form)
     output_file = None
 
     if form.validate_on_submit():
+        submission_handler = SubmissionHandler(session_id, form)
         result = submission_handler.handle_submission()
         output_file = result['filename']
 
@@ -46,9 +47,9 @@ def index():
     
     return render_template('index.html', form=form, output_file=output_file)
 
-@app.route('/download/<session_id>/<filename>')
-def download(session_id, filename):
-    directory = os.path.join(SESSIONS_FOLDER, session_id)
+@app.route('/download/<session_id>/<submission_time>/<filename>')
+def download(session_id, submission_time, filename):
+    directory = os.path.join(SESSIONS_FOLDER, session_id, submission_time)
     return send_from_directory(directory=directory, path=filename, as_attachment=True)
 
 @app.route('/results/<session_id>', methods=['GET'])

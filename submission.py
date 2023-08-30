@@ -21,7 +21,9 @@ class SubmissionHandler:
         """
         self.session_id = session_id
         self.form = form
+        self.submission_time = datetime.now()
         self.session_directory = self.create_directory()
+        self.submission_directory = self.create_submission_directory()
         self.fasta_filename = None
         self.file_path = None
 
@@ -36,23 +38,31 @@ class SubmissionHandler:
         custom_logger.debug(f"Directory created for session {self.session_id}.")
         return session_directory
     
+    def create_submission_directory(self):
+        """Create a unique directory for each submission."""
+        timestamp = self.submission_time.strftime('%Y%m%d%H%M%S')
+        submission_directory = os.path.join(self.session_directory, f"{timestamp}")
+        os.makedirs(submission_directory, exist_ok=True)
+        custom_logger.debug(f"Directory created for submission {self.session_id}/{timestamp}.")
+        return submission_directory
+    
     def save_submission_data(self):
         """Save the uploaded FASTA file or the input sequence."""
         if self.form.fasta_file.data:
             self.fasta_filename = self.form.fasta_file.data.filename
-            self.file_path = os.path.join(self.session_directory, self.fasta_filename)
+            self.file_path = os.path.join(self.submission_directory, self.fasta_filename)
             self.form.fasta_file.data.save(self.file_path)
         else:
             self.fasta_filename = 'sequence.fasta'
-            self.file_path = os.path.join(self.session_directory, self.fasta_filename)
+            self.file_path = os.path.join(self.submission_directory, self.fasta_filename)
             with open(self.file_path, 'w') as f:
                 f.write(self.form.sequence.data)
         custom_logger.info(f"FASTA data saved for session {self.session_id}.")
 
     def store_submission_metadata(self):
         """Insert metadata related to the submission into the database."""
-        expiration_time = (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
-        insert_metadata(self.session_id, self.fasta_filename, 'output.fasta', 'uploaded', expiration_time)
+        expiration_time = (self.submission_time + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
+        insert_metadata(self.session_id, self.fasta_filename, 'output.fasta', self.submission_time.strftime('%Y-%m-%d %H:%M:%S'), 'uploaded', expiration_time)
         custom_logger.info(f"Metadata inserted into database for session {self.session_id}.")
 
     def read_cached_submission(self):
@@ -67,7 +77,7 @@ class SubmissionHandler:
     def process_and_save_results(self, fasta_content):
         """Process the FASTA file content and save the results."""
         processor = FastaProcessor()
-        output_file_path = os.path.join(self.session_directory, 'output.fasta')
+        output_file_path = os.path.join(self.submission_directory, 'output.fasta')
         success = processor.process(self.file_path, output_file_path)
 
 
