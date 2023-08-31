@@ -92,10 +92,10 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## Authors
 
-- [**Stuart MacGowan**](www.github.com/stuartmac)
+- [**Stuart MacGowan**](https://www.github.com/stuartmac)
 
 ## Acknowledgments
 
-- Geoff Barton, [Jim Procter](https://github.com/foreveremain), [Mateusz Warowny](www.github.com/warownia1), [James Abbott](www.github.com/jamesabbott), Ben Soares and [Javier Sanchez Utges](www.github.com/JavierSanchez-Utges) for their contributions to this project and the Dundee Resource.
+- Geoff Barton, [Jim Procter](https://github.com/foreveremain), [Mateusz Warowny](https://www.github.com/warownia1), [James Abbott](https://www.github.com/jamesabbott), Ben Soares and [Javier Sanchez Utges](https://www.github.com/JavierSanchez-Utges) for their contributions to this project and the Dundee Resource.
 
 - This project was developed as part of the [BBSRC](https://www.ukri.org/councils/bbsrc/) funded [Dundee Resource for Protein Structure Prediction and Sequence Analysis](https://gow.bbsrc.ukri.org/grants/AwardDetails.aspx?FundingReference=BB%2fR014752%2f1) (grant number 208391/Z/17/Z).
