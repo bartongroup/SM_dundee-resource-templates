@@ -15,7 +15,7 @@
                         {{ form.hidden_tag() }}
                         <div class="mb-3">
                             {{ form.sequence.label(class="form-label") }}
-                            {{ form.sequence(class="form-control", rows=5) }}
+                            {{ form.sequence(class="form-control", rows=5, **{'data-drag-drop': 'true'}) }}
                         </div>
                         <div class="mb-3">
                             {{ form.fasta_file.label(class="form-label") }}
@@ -39,4 +39,6 @@
         });
     });
 </script>
+<!-- JavaScript for drag and drop -->
+<script src="{{ url_for('static', filename='js/drag-and-drop.js') }}"></script>
 {% endblock %}
