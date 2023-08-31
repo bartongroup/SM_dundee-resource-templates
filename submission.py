@@ -78,9 +78,9 @@ class SubmissionHandler:
 
     def process_and_save_results(self, fasta_content):
         """Process the FASTA file content and save the results."""
-        processor = FastaProcessor()
+        processor = SlivkaProcessor(SLIVKA_URL)
         output_file_path = os.path.join(self.submission_directory, 'output.fasta')
-        success = processor.process_slivka(self.file_path, output_file_path, self.submission_directory)
+        success = processor.process_file(self.file_path, output_file_path, self.submission_directory)
 
 
     def update_db_status(self):
@@ -149,7 +149,14 @@ class FastaProcessor:
             custom_logger.error(f"An error occurred while processing the FASTA file: {str(e)}")
             return False
     
-    def process_slivka(self, input_file_path, output_file_path, submission_directory):
+class SlivkaProcessor:
+    """Handles the processing of FASTA files using Slivka."""
+
+    def __init__(self, slivka_url):
+        self.client = SlivkaClient(slivka_url)
+        self.service = self.client['clustalo']
+
+    def process_file(self, input_file_path, output_file_path, submission_directory):
         """Process the given FASTA file using Slivka.
 
         Args:
@@ -160,60 +167,86 @@ class FastaProcessor:
             bool: True if processing was successful, False otherwise.
         """
         try:
-            client = SlivkaClient(SLIVKA_URL)
-            service = client['clustalo']
-            data = {
-                    'dealign': False,
-                    'full-distance': False,
-                    'full-distance-iteration': False,
-                    'max-hmm-iterations': 1,
-                    'iterations': 1,
-                    'max-guidetree-iterations': 1,
-                    'input': None
-                }
-
             # Open the FASTA file and set the media type
-            file_object = open(input_file_path, 'rb')
-            media_type = 'application/fasta'
+            with open(input_file_path, 'rb') as file_object:
+                media_type = 'application/fasta'
 
-            # Create the 'files' dictionary with the correct format
-            files = {
-                'input': (os.path.basename(input_file_path), file_object, media_type)
-            }
+                # Submit the job to Slivka 
+                job = self.submit_job_to_slivka(file_object, media_type)
 
-            # Now submit the job
-            job = service.submit_job(data=data, files=files)
-            custom_logger.info(f"Job submitted: {job.id}")
-            
-            # TODO: Asynchronous processing... Celery?
-            # Wait for the job to finish
-            while job.status not in ('COMPLETED', 'FAILED'):
-                current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                custom_logger.info(f"Polling job status at {current_time}... (Status: {job.status})")
-                sleep(3)  # Polling interval
+                # Wait for the job to complete
+                self.wait_for_job_completion(job)
 
-            custom_logger.info(f"Completion Time: {job.completion_time}")
+                # Download the job results
+                self.download_job_results(job, submission_directory)
 
-            # Get the results
-            # TODO: results = job.get_results()
-            # Download each file in the job results
-            for file in job.files:
-                # You can specify the local path where you want to save the file
-                local_path = os.path.join(submission_directory, file.id)
-                os.makedirs(os.path.dirname(local_path), exist_ok=True)
-                file.dump(local_path)
-                custom_logger.info(f"File {file.id} downloaded to {local_path}")
+                # Copy Clustal Omega results (job.files[0].id) to the output file
+                with open(os.path.join(submission_directory, job.files[0].id)) as result_file:
+                    result = result_file.read()
+                with open(output_file_path, 'w') as outfile:
+                    outfile.write(result)
 
-            # Copy Clustal Omega results (job.files[0].id) to the output file
-            with open(os.path.join(submission_directory, job.files[0].id)) as result_file:
-                result = result_file.read()
-
-            # Save the results to the output file
-            with open(output_file_path, 'w') as outfile:
-                # outfile.write(''.join([file.content.decode('utf-8') for file in job.files]))
-                outfile.write(result)
-
-            return True
+                return True
         except Exception as e:
             custom_logger.error(f"An error occurred while processing the FASTA file: {str(e)}")
             return False
+
+    def submit_job_to_slivka(self, file_object, media_type):
+        """Submit the given file to Slivka for processing.
+
+        Args:
+            file_object (file): The file object to submit.
+            media_type (str): The media type of the file.
+
+        Returns:
+            SlivkaJob: The job object representing the submitted job.
+        """
+        data = {
+            'dealign': False,
+            'full-distance': False,
+            'full-distance-iteration': False,
+            'max-hmm-iterations': 1,
+            'iterations': 1,
+            'max-guidetree-iterations': 1,
+            'input': None
+        }
+
+        # Create the 'files' dictionary with the correct format
+        files = {
+            'input': (os.path.basename(file_object.name), file_object, media_type)
+        }
+
+        # Submit the job to Slivka
+        job = self.service.submit_job(data=data, files=files)
+        custom_logger.info(f"Job submitted: {job.id}")
+
+        return job
+    
+    def wait_for_job_completion(self, job):
+        """Wait for the given job to complete.
+
+        Args:
+            job (SlivkaJob): The job object representing the submitted job.
+        """
+        # Wait for the job to complete
+        while job.status not in ('COMPLETED', 'FAILED'):
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            custom_logger.info(f"Polling job status at {current_time}... (Status: {job.status})")
+            sleep(3)  # Polling interval
+
+        custom_logger.info(f"Completion Time: {job.completion_time}")
+
+    def download_job_results(self, job, submission_directory):
+        """Download the results of the given job to the specified directory.
+
+        Args:
+            job (SlivkaJob): The job object representing the completed job.
+            submission_directory (str): The directory where the results should be saved.
+        """
+        # Download each file in the job results
+        for file in job.files:
+            # You can specify the local path where you want to save the file
+            local_path = os.path.join(submission_directory, file.id)
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
+            file.dump(local_path)
+            custom_logger.info(f"File {file.id} downloaded to {local_path}")
