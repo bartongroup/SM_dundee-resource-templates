@@ -3,7 +3,9 @@ from time import sleep
 
 import os
 
-from config import SESSIONS_FOLDER
+from slivka_client import SlivkaClient
+
+from config import SESSIONS_FOLDER, SLIVKA_URL
 from logger_config import setup_logging
 from session_db import insert_metadata, update_status
 
@@ -78,7 +80,7 @@ class SubmissionHandler:
         """Process the FASTA file content and save the results."""
         processor = FastaProcessor()
         output_file_path = os.path.join(self.submission_directory, 'output.fasta')
-        success = processor.process(self.file_path, output_file_path)
+        success = processor.process_slivka(self.file_path, output_file_path, self.submission_directory)
 
 
     def update_db_status(self):
@@ -118,7 +120,7 @@ class FastaProcessor:
     """Handles the processing of FASTA files."""
 
     @staticmethod
-    def process(input_file_path, output_file_path):
+    def process_local(input_file_path, output_file_path):
         """Process the given FASTA file.
 
         Args:
@@ -142,6 +144,75 @@ class FastaProcessor:
             with open(output_file_path, 'w') as outfile:
                 outfile.write(processed_content)
             
+            return True
+        except Exception as e:
+            custom_logger.error(f"An error occurred while processing the FASTA file: {str(e)}")
+            return False
+    
+    def process_slivka(self, input_file_path, output_file_path, submission_directory):
+        """Process the given FASTA file using Slivka.
+
+        Args:
+            input_file_path (str): The path to the input FASTA file.
+            output_file_path (str): The path where the output should be saved.
+
+        Returns:
+            bool: True if processing was successful, False otherwise.
+        """
+        try:
+            client = SlivkaClient(SLIVKA_URL)
+            service = client['clustalo']
+            data = {
+                    'dealign': False,
+                    'full-distance': False,
+                    'full-distance-iteration': False,
+                    'max-hmm-iterations': 1,
+                    'iterations': 1,
+                    'max-guidetree-iterations': 1,
+                    'input': None
+                }
+
+            # Open the FASTA file and set the media type
+            file_object = open(input_file_path, 'rb')
+            media_type = 'application/fasta'
+
+            # Create the 'files' dictionary with the correct format
+            files = {
+                'input': (os.path.basename(input_file_path), file_object, media_type)
+            }
+
+            # Now submit the job
+            job = service.submit_job(data=data, files=files)
+            custom_logger.info(f"Job submitted: {job.id}")
+            
+            # TODO: Asynchronous processing... Celery?
+            # Wait for the job to finish
+            while job.status not in ('COMPLETED', 'FAILED'):
+                current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                custom_logger.info(f"Polling job status at {current_time}... (Status: {job.status})")
+                sleep(3)  # Polling interval
+
+            custom_logger.info(f"Completion Time: {job.completion_time}")
+
+            # Get the results
+            # TODO: results = job.get_results()
+            # Download each file in the job results
+            for file in job.files:
+                # You can specify the local path where you want to save the file
+                local_path = os.path.join(submission_directory, file.id)
+                os.makedirs(os.path.dirname(local_path), exist_ok=True)
+                file.dump(local_path)
+                custom_logger.info(f"File {file.id} downloaded to {local_path}")
+
+            # Copy Clustal Omega results (job.files[0].id) to the output file
+            with open(os.path.join(submission_directory, job.files[0].id)) as result_file:
+                result = result_file.read()
+
+            # Save the results to the output file
+            with open(output_file_path, 'w') as outfile:
+                # outfile.write(''.join([file.content.decode('utf-8') for file in job.files]))
+                outfile.write(result)
+
             return True
         except Exception as e:
             custom_logger.error(f"An error occurred while processing the FASTA file: {str(e)}")
