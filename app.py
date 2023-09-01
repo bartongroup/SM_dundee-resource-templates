@@ -1,6 +1,7 @@
 
 from flask import Flask, render_template, request, send_from_directory, session, redirect, url_for
 from wtforms.validators import DataRequired, ValidationError
+from werkzeug.utils import secure_filename
 
 import os
 import uuid
@@ -12,6 +13,7 @@ from forms import FastaForm
 from logger_config import setup_logging
 from session_db import initialize_db, fetch_results
 from submission import SubmissionHandler
+from utils.validation import is_valid_session_id, is_valid_submission_time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -49,8 +51,26 @@ def index():
 
 @app.route('/download/<session_id>/<submission_time>/<filename>')
 def download(session_id, submission_time, filename):
+    # Validate session_id and submission_time
+    if not is_valid_session_id(session_id) or not is_valid_submission_time(submission_time):
+        return "Invalid input", 400
+
+    # Sanitize filename
+    sanitized_filename = secure_filename(filename)
+
     directory = os.path.join(SESSIONS_FOLDER, session_id, submission_time)
-    return send_from_directory(directory=directory, path=filename, as_attachment=True)
+    file_path = os.path.join(directory, sanitized_filename)
+
+    # Ensure the file_path is within the expected directory
+    if not file_path.startswith(SESSIONS_FOLDER):
+        return "Invalid file path", 400
+
+    # Check if the file exists before sending it
+    if os.path.exists(file_path):
+        return send_from_directory(directory=directory, path=sanitized_filename, as_attachment=True)
+    else:
+        return "File not found", 404
+
 
 @app.route('/results/<session_id>', methods=['GET'])
 def results(session_id):
