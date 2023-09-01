@@ -81,4 +81,5 @@ def results(session_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    debug_mode = os.environ.get('FLASK_DEBUG', False)
+    app.run(debug=debug_mode)
