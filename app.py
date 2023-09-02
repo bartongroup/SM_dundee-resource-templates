@@ -1,4 +1,10 @@
 
+from gevent import monkey
+monkey.patch_all()
+
+import gevent
+
+
 from flask import Flask, render_template, request, send_from_directory, session, redirect, url_for
 from wtforms.validators import DataRequired, ValidationError
 from werkzeug.utils import secure_filename
@@ -37,17 +43,20 @@ def index():
     session_id = session['session_id']
 
     form = FastaForm()
-    output_file = None
 
     if form.validate_on_submit():
+        # Create a new submission handler and spawn a new asynchronous task
         submission_handler = SubmissionHandler(session_id, form)
-        result = submission_handler.handle_submission()
-        output_file = result['filename']
+        async_task = gevent.spawn(submission_handler.handle_submission)
+        async_task.start()
+
+        # Wait for the submission metadata to be available
+        submission_handler.metadata_available.wait()
 
         # Redirect to the results page after processing
         return redirect(url_for('results', session_id=session_id))
     
-    return render_template('index.html', form=form, output_file=output_file)
+    return render_template('index.html', form=form)
 
 @app.route('/download/<session_id>/<submission_time>/<filename>')
 def download(session_id, submission_time, filename):

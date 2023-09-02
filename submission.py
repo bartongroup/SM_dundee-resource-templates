@@ -3,6 +3,7 @@ from time import sleep
 
 import os
 
+from gevent.event import Event
 from slivka_client import SlivkaClient
 
 from config import SESSIONS_FOLDER, SLIVKA_URL
@@ -28,6 +29,7 @@ class SubmissionHandler:
         self.submission_directory = self.create_submission_directory()
         self.fasta_filename = None
         self.file_path = None
+        self.metadata_available = Event()  # Create an event to signal metadata availability
 
     def create_directory(self):
         """Create a directory for the submission session.
@@ -65,6 +67,7 @@ class SubmissionHandler:
         """Insert metadata related to the submission into the database."""
         expiration_time = (self.submission_time + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
         insert_metadata(self.session_id, self.fasta_filename, 'output.fasta', self.submission_time.strftime('%Y-%m-%d %H:%M:%S'), 'uploaded', expiration_time)
+        self.metadata_available.set()  # Signal that metadata is available
         custom_logger.info(f"Metadata inserted into database for session {self.session_id}.")
 
     def read_cached_submission(self):
