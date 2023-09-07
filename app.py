@@ -47,8 +47,7 @@ def index():
     if form.validate_on_submit():
         # Create a new submission handler and spawn a new asynchronous task
         submission_handler = SubmissionHandler(session_id, form)
-        async_task = gevent.spawn(submission_handler.handle_submission)
-        async_task.start()
+        gevent.spawn(submission_handler.handle_submission)
 
         # Wait for the submission metadata to be available
         submission_handler.metadata_available.wait()
