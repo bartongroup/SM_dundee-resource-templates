@@ -12,3 +12,4 @@ DATABASE_PATH = os.path.join(BASE_DIR, 'db', 'session.sqlite')
 DATABASE_PATH = os.environ.get('APP_DATABASE_PATH', DATABASE_PATH)
 
 SLIVKA_URL = os.environ.get('SLIVKA_URL', 'http://localhost:8000/')
+EXPIRATION_DAYS = float(os.environ.get('APP_EXPIRATION_DAYS', 7))

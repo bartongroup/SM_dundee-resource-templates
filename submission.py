@@ -6,7 +6,7 @@ import os
 from gevent.event import Event
 from slivka_client import SlivkaClient
 
-from config import SESSIONS_FOLDER, SLIVKA_URL
+from config import SESSIONS_FOLDER, SLIVKA_URL, EXPIRATION_DAYS
 from logger_config import setup_logging
 from session_db import insert_metadata, update_status
 
@@ -65,7 +65,7 @@ class SubmissionHandler:
 
     def store_submission_metadata(self):
         """Insert metadata related to the submission into the database."""
-        expiration_time = (self.submission_time + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
+        expiration_time = (self.submission_time + timedelta(days=EXPIRATION_DAYS)).strftime('%Y-%m-%d %H:%M:%S')
         insert_metadata(self.session_id, self.fasta_filename, 'output.fasta', self.submission_time.strftime('%Y-%m-%d %H:%M:%S'), 'uploaded', expiration_time)
         self.metadata_available.set()  # Signal that metadata is available
         custom_logger.info(f"Metadata inserted into database for session {self.session_id}.")
