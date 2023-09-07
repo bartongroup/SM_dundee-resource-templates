@@ -3,6 +3,7 @@ from gevent import monkey
 monkey.patch_all()
 
 import gevent
+from gevent.pywsgi import WSGIServer
 
 
 from flask import Flask, render_template, request, send_from_directory, session, redirect, url_for
@@ -89,5 +90,7 @@ def results(session_id):
 
 
 if __name__ == '__main__':
-    debug_mode = os.environ.get('FLASK_DEBUG', False)
-    app.run(debug=debug_mode)
+    app.debug = os.environ.get('FLASK_DEBUG', False)
+    server = WSGIServer(('127.0.0.1', 5000), app)
+    server.serve_forever()
+
