@@ -3,6 +3,7 @@ from gevent import monkey
 monkey.patch_all()
 
 import gevent
+from gevent.pywsgi import WSGIServer
 
 
 from flask import Flask, render_template, request, send_from_directory, session, redirect, url_for
@@ -47,8 +48,7 @@ def index():
     if form.validate_on_submit():
         # Create a new submission handler and spawn a new asynchronous task
         submission_handler = SubmissionHandler(session_id, form)
-        async_task = gevent.spawn(submission_handler.handle_submission)
-        async_task.start()
+        gevent.spawn(submission_handler.handle_submission)
 
         # Wait for the submission metadata to be available
         submission_handler.metadata_available.wait()
@@ -90,5 +90,7 @@ def results(session_id):
 
 
 if __name__ == '__main__':
-    debug_mode = os.environ.get('FLASK_DEBUG', False)
-    app.run(debug=debug_mode)
+    app.debug = os.environ.get('FLASK_DEBUG', False)
+    server = WSGIServer(('127.0.0.1', 5000), app)
+    server.serve_forever()
+
