@@ -1,6 +1,6 @@
 import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SESSIONS_FOLDER = os.path.join(BASE_DIR, 'sessions')
 SESSIONS_FOLDER = os.environ.get('APP_SESSIONS_PATH', SESSIONS_FOLDER)
