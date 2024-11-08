@@ -91,6 +91,6 @@ def results(session_id):
 
 if __name__ == '__main__':
     app.debug = os.environ.get('FLASK_DEBUG', False)
-    server = WSGIServer(('127.0.0.1', 8088), app)
+    server = WSGIServer(('0.0.0.0', 8088), app)
     server.serve_forever()
 
