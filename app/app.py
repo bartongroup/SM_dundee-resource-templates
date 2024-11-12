@@ -84,6 +84,7 @@ def ligysis():
             'clust_method': request.form.get('clust_method', 'average'),
             'clust_dist': request.form.get('clust_dist', 0.5),
             'hmm_iters': request.form.get('hmm_iters', 3),
+            'file_key_override': 'input_dir'  # Custom file key for ligysis service
         }
         
         submission_handler = SubmissionHandler(session_id, form, service_type='fragsys', config=config, tar_upload=True)

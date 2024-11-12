@@ -238,10 +238,11 @@ class SlivkaProcessor:
             SlivkaJob: The job object representing the submitted job.
         """
         data = self.config
+        file_key = data.pop('file_key_override', 'input')
 
         # Create the 'files' dictionary with the correct format
         files = {
-            'input': (os.path.basename(file_object.name), file_object, media_type)
+            file_key: (os.path.basename(file_object.name), file_object, media_type)
         }
 
         # Submit the job to Slivka
