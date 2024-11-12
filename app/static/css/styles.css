@@ -9,3 +9,8 @@
 .table-warning {
     background-color: #ffeeba;  /* light yellow */
 }
+
+/* Broaden navbar */
+.navbar {
+    height: 80px;
+}
