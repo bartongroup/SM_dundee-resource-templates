@@ -31,6 +31,10 @@
                         <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" aria-current="page"
                             href="{{ url_for('index') }}">ClustalO</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'ligysis' %}active{% endif %}"
+                            href="{{ url_for('ligysis') }}">Ligysis</a>
+                    </li>
                     {% if session.get('session_id') %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'results' %}active{% endif %}"
