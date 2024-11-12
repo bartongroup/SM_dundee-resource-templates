@@ -99,12 +99,17 @@ class SubmissionHandler:
         custom_logger.info(f"Metadata inserted into database for session {self.session_id}.")
 
     def read_cached_submission(self):
-        """Read the saved FASTA file.
+        """Read the saved submission file.
 
         Returns:
-            str: The content of the FASTA file.
+            str or bytes: The content of the submission file.
         """
-        with open(self.file_path, 'r') as f:
+        if self.file_path.endswith(('.tar', '.tar.gz', '.tgz')):
+            mode = 'rb'
+        else:
+            mode = 'r'
+        
+        with open(self.file_path, mode) as f:
             return f.read()
 
     def process_and_save_results(self, fasta_content):
@@ -112,7 +117,6 @@ class SubmissionHandler:
         processor = SlivkaProcessor(SLIVKA_URL, service=self.service_type, config=self.config)
         output_file_path = os.path.join(self.submission_directory, 'output.fasta')
         success = processor.process_file(self.file_path, output_file_path, self.submission_directory)
-
 
     def update_db_status(self):
         """Update the processing status in the database."""
