@@ -1,4 +1,3 @@
-
 from gevent import monkey
 monkey.patch_all()
 
@@ -16,7 +15,7 @@ from datetime import datetime, timedelta
 
 from config import SESSIONS_FOLDER
 from filters import datetime_parse, datetime_format
-from forms import FastaForm
+from forms import FastaForm, LigysisForm
 from logger_config import setup_logging
 from session_db import initialize_db, fetch_results
 from submission import SubmissionHandler
@@ -67,6 +66,32 @@ def index():
         return redirect(url_for('results', session_id=session_id))
     
     return render_template('index.html', form=form)
+
+@app.route('/ligysis', methods=['GET', 'POST'])
+def ligysis():
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+    
+    session_id = session['session_id']
+    form = LigysisForm()
+
+    if form.validate_on_submit():
+        config = {
+            'uniprot_id': request.form.get('uniprot_id', 'Q9UGL1'),
+            'format': request.form.get('format', 'mmcif'),
+            'variants': request.form.get('variants', True),
+            'override': request.form.get('override', True),
+            'clust_method': request.form.get('clust_method', 'average'),
+            'clust_dist': request.form.get('clust_dist', 0.5),
+            'hmm_iters': request.form.get('hmm_iters', 3),
+        }
+        
+        submission_handler = SubmissionHandler(session_id, form, service_type='fragsys', config=config, tar_upload=True)
+        gevent.spawn(submission_handler.handle_submission)
+        submission_handler.metadata_available.wait()
+        return redirect(url_for('results', session_id=session_id))
+    
+    return render_template('ligysis.html', form=form)
 
 @app.route('/download/<session_id>/<submission_time>/<filename>')
 def download(session_id, submission_time, filename):

@@ -1,7 +1,10 @@
+import tarfile
 from datetime import datetime, timedelta
 from time import sleep
 
 import os
+
+from werkzeug.utils import secure_filename
 
 from gevent.event import Event
 from slivka_client import SlivkaClient
@@ -15,7 +18,7 @@ custom_logger = setup_logging(name='submission')
 class SubmissionHandler:
     """Handles FASTA file submissions and associated processing."""
 
-    def __init__(self, session_id, form, service_type, config=None):
+    def __init__(self, session_id, form, service_type, config=None, tar_upload=False):
         """Initialize a SubmissionHandler instance.
 
         Args:
@@ -23,11 +26,13 @@ class SubmissionHandler:
             form (FlaskForm): Form object containing the submission details.
             service_type (str): Type of service to use for processing.
             config (dict): Optional configuration dictionary.
+            tar_upload (bool): Flag indicating if the upload is a tar file.
         """
         self.session_id = session_id
         self.form = form
         self.service_type = service_type
         self.config = config or {}
+        self.tar_upload = tar_upload
         self.submission_time = datetime.now()
         self.session_directory = self.create_directory()
         self.submission_directory = self.create_submission_directory()
@@ -55,6 +60,25 @@ class SubmissionHandler:
         return submission_directory
     
     def save_submission_data(self):
+        """Save the uploaded data."""
+        if self.tar_upload:
+            self.file_path = os.path.join(self.submission_directory, 'submission.tar.gz')
+            self.filename = 'submission.tar.gz'
+            self.save_and_tar_files()
+        else:
+            self.save_sequence()
+
+    def save_and_tar_files(self):
+        """Save and tar the uploaded FASTA files."""
+        with tarfile.open(self.file_path, "w:gz") as tar:
+            for file in self.form.files.data:
+                filename = secure_filename(file.filename)
+                file_path = os.path.join(self.submission_directory, filename)
+                file.save(file_path)
+                tar.add(file_path, arcname=filename)
+        custom_logger.info(f"Uploaded files saved and tarred for session {self.session_id}.")
+
+    def save_sequence(self):
         """Save the uploaded FASTA file or the input sequence."""
         if self.form.fasta_file.data:
             self.filename = self.form.fasta_file.data.filename
