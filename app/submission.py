@@ -31,7 +31,7 @@ class SubmissionHandler:
         self.submission_time = datetime.now()
         self.session_directory = self.create_directory()
         self.submission_directory = self.create_submission_directory()
-        self.fasta_filename = None
+        self.filename = None
         self.file_path = None
         self.metadata_available = Event()  # Create an event to signal metadata availability
 
@@ -57,12 +57,12 @@ class SubmissionHandler:
     def save_submission_data(self):
         """Save the uploaded FASTA file or the input sequence."""
         if self.form.fasta_file.data:
-            self.fasta_filename = self.form.fasta_file.data.filename
-            self.file_path = os.path.join(self.submission_directory, self.fasta_filename)
+            self.filename = self.form.fasta_file.data.filename
+            self.file_path = os.path.join(self.submission_directory, self.filename)
             self.form.fasta_file.data.save(self.file_path)
         else:
-            self.fasta_filename = 'sequence.fasta'
-            self.file_path = os.path.join(self.submission_directory, self.fasta_filename)
+            self.filename = 'sequence.fasta'
+            self.file_path = os.path.join(self.submission_directory, self.filename)
             with open(self.file_path, 'w') as f:
                 f.write(self.form.sequence.data)
         custom_logger.info(f"FASTA data saved for session {self.session_id}.")
@@ -70,7 +70,7 @@ class SubmissionHandler:
     def store_submission_metadata(self):
         """Insert metadata related to the submission into the database."""
         expiration_time = (self.submission_time + timedelta(days=EXPIRATION_DAYS)).strftime('%Y-%m-%d %H:%M:%S')
-        insert_metadata(self.session_id, self.fasta_filename, 'output.fasta', self.submission_time.strftime('%Y-%m-%d %H:%M:%S'), 'uploaded', expiration_time)
+        insert_metadata(self.session_id, self.filename, 'output.fasta', self.submission_time.strftime('%Y-%m-%d %H:%M:%S'), 'uploaded', expiration_time)
         self.metadata_available.set()  # Signal that metadata is available
         custom_logger.info(f"Metadata inserted into database for session {self.session_id}.")
 
@@ -92,7 +92,7 @@ class SubmissionHandler:
 
     def update_db_status(self):
         """Update the processing status in the database."""
-        update_status(self.session_id, self.fasta_filename, "processed")
+        update_status(self.session_id, self.filename, "processed")
         custom_logger.info(f"FASTA file processed and status updated for session {self.session_id}.")
 
     def handle_submission(self):
@@ -113,7 +113,7 @@ class SubmissionHandler:
                 'status': 'success',
                 'message': 'File processed successfully.',
                 'directory': self.session_directory,
-                'filename': self.fasta_filename
+                'filename': self.filename
             })
         except Exception as e:
             custom_logger.error(f"An error occurred while handling submission for session {self.session_id}: {str(e)}")
