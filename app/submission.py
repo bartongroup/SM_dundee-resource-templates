@@ -15,15 +15,19 @@ custom_logger = setup_logging(name='submission')
 class SubmissionHandler:
     """Handles FASTA file submissions and associated processing."""
 
-    def __init__(self, session_id, form):
+    def __init__(self, session_id, form, service_type, config=None):
         """Initialize a SubmissionHandler instance.
 
         Args:
             session_id (str): Unique identifier for the submission session.
             form (FlaskForm): Form object containing the submission details.
+            service_type (str): Type of service to use for processing.
+            config (dict): Optional configuration dictionary.
         """
         self.session_id = session_id
         self.form = form
+        self.service_type = service_type
+        self.config = config or {}
         self.submission_time = datetime.now()
         self.session_directory = self.create_directory()
         self.submission_directory = self.create_submission_directory()
@@ -81,7 +85,7 @@ class SubmissionHandler:
 
     def process_and_save_results(self, fasta_content):
         """Process the FASTA file content and save the results."""
-        processor = SlivkaProcessor(SLIVKA_URL)
+        processor = SlivkaProcessor(SLIVKA_URL, service=self.service_type, config=self.config)
         output_file_path = os.path.join(self.submission_directory, 'output.fasta')
         success = processor.process_file(self.file_path, output_file_path, self.submission_directory)
 
@@ -155,9 +159,10 @@ class FastaProcessor:
 class SlivkaProcessor:
     """Handles the processing of FASTA files using Slivka."""
 
-    def __init__(self, slivka_url):
+    def __init__(self, slivka_url, service, config=None):
         self.client = SlivkaClient(slivka_url)
-        self.service = self.client['clustalo']
+        self.service = self.client[service]
+        self.config = config or {}
 
     def process_file(self, input_file_path, output_file_path, submission_directory):
         """Process the given FASTA file using Slivka.
@@ -204,15 +209,7 @@ class SlivkaProcessor:
         Returns:
             SlivkaJob: The job object representing the submitted job.
         """
-        data = {
-            'dealign': False,
-            'full-distance': False,
-            'full-distance-iteration': False,
-            'max-hmm-iterations': 1,
-            'iterations': 1,
-            'max-guidetree-iterations': 1,
-            'input': None
-        }
+        data = self.config
 
         # Create the 'files' dictionary with the correct format
         files = {

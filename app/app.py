@@ -46,8 +46,18 @@ def index():
     form = FastaForm()
 
     if form.validate_on_submit():
+        # Define the configuration for the submission handler
+        config = {
+            'dealign': request.form.get('dealign', False),
+            'full-distance': request.form.get('full-distance', False),
+            'full-distance-iteration': request.form.get('full-distance-iteration', False),
+            'max-hmm-iterations': request.form.get('max-hmm-iterations', 1),
+            'iterations': request.form.get('iterations', 1),
+            'max-guidetree-iterations': request.form.get('max-guidetree-iterations', 1),
+            'input': request.form.get('input', None),
+        }
         # Create a new submission handler and spawn a new asynchronous task
-        submission_handler = SubmissionHandler(session_id, form)
+        submission_handler = SubmissionHandler(session_id, form, service_type='clustalo', config=config)
         gevent.spawn(submission_handler.handle_submission)
 
         # Wait for the submission metadata to be available
