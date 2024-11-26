@@ -87,7 +87,7 @@ def ligysis():
             'file_key_override': 'input_dir'  # Custom file key for ligysis service
         }
         
-        submission_handler = SubmissionHandler(session_id, form, service_type='fragsys', config=config, tar_upload=True)
+        submission_handler = SubmissionHandler(session_id, form, service_type='ligysis', config=config, tar_upload=True)
         gevent.spawn(submission_handler.handle_submission)
         submission_handler.metadata_available.wait()
         return redirect(url_for('results', session_id=session_id))
