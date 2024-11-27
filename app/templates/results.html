@@ -26,6 +26,7 @@
                                 <th>Filename</th>
                                 <th>Results</th>
                                 <th>Submission Time</th>
+                                <th>Slivka ID</th>
                                 <th>Status</th>
                                 <th>Expiration Time</th>
                             </tr>
@@ -43,6 +44,7 @@
                                         <td><a href="{{ url_for('download', session_id=session_id, submission_time=result.submission_time|datetime_parse|datetime_format, filename=result.results) }}">{{
                                                 result.results }}</a></td>
                                         <td>{{ result.submission_time }}</td>
+                                        <td>{{ result.slivka_id }}</td>
                                         <td>{{ result.status }}</td>
                                         <td>{{ result.expiration_time }}</td>
                                         <!-- Add other fields as necessary -->
