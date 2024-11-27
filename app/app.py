@@ -36,16 +36,16 @@ custom_logger = setup_logging(name='app')
 app.jinja_env.filters['datetime_parse'] = datetime_parse
 app.jinja_env.filters['datetime_format'] = datetime_format
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    # Set the session to be permanent
+def get_or_create_session_id():
+    """Get or create a session ID."""
     session.permanent = True
-    
-    # Check if session_id exists, create one if not
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
-    
-    session_id = session['session_id']
+    return session['session_id']
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    session_id = get_or_create_session_id()
 
     form = FastaForm()
 
@@ -74,13 +74,7 @@ def index():
 
 @app.route('/ligysis', methods=['GET', 'POST'])
 def ligysis():
-    # Set the session to be permanent
-    session.permanent = True
-    
-    if 'session_id' not in session:
-        session['session_id'] = str(uuid.uuid4())
-    
-    session_id = session['session_id']
+    session_id = get_or_create_session_id()
     form = LigysisForm()
 
     if form.validate_on_submit():
