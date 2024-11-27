@@ -116,7 +116,7 @@ def download(session_id, submission_time, filename):
     if os.path.exists(file_path):
         return send_from_directory(directory=directory, path=sanitized_filename, as_attachment=True)
     else:
-        return "File not found", 404
+        return render_template('errors/404.html', error_message="File not found", file_path=file_path), 404
 
 
 @app.route('/results/<session_id>', methods=['GET'])
