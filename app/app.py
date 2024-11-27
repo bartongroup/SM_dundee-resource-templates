@@ -23,6 +23,8 @@ from utils.validation import is_valid_session_id, is_valid_submission_time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=60)  # Long expiry
+app.config['SESSION_COOKIE_NAME'] = 'drsasp_session'
 
 os.makedirs(SESSIONS_FOLDER, exist_ok=True)
 
@@ -36,6 +38,9 @@ app.jinja_env.filters['datetime_format'] = datetime_format
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    # Set the session to be permanent
+    session.permanent = True
+    
     # Check if session_id exists, create one if not
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
@@ -69,6 +74,9 @@ def index():
 
 @app.route('/ligysis', methods=['GET', 'POST'])
 def ligysis():
+    # Set the session to be permanent
+    session.permanent = True
+    
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
     
