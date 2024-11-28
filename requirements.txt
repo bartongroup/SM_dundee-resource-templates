@@ -9,3 +9,4 @@ Werkzeug==2.3.7
 WTForms==3.0.1
 slivka-client @ git+https://github.com/bartongroup/slivka-python-client@edc5774
 gevent==23.9.0
+tenacity==9.0.0
