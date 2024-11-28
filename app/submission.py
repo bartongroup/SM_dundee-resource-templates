@@ -81,7 +81,7 @@ class SubmissionHandler:
     def save_sequence(self):
         """Save the uploaded FASTA file or the input sequence."""
         if self.form.fasta_file.data:
-            self.filename = self.form.fasta_file.data.filename
+            self.filename = secure_filename(self.form.fasta_file.data.filename)
             self.file_path = os.path.join(self.submission_directory, self.filename)
             self.form.fasta_file.data.save(self.file_path)
         else:
