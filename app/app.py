@@ -13,7 +13,7 @@ import os
 import uuid
 from datetime import datetime, timedelta
 
-from config import SESSIONS_FOLDER
+from config import SESSIONS_FOLDER, SLIVKA_URL
 from filters import datetime_parse, datetime_format
 from forms import FastaForm, LigysisForm
 from logger_config import setup_logging
@@ -124,7 +124,8 @@ def results(session_id):
     # Fetch results based on the session ID
     results = fetch_results(session_id)
     return render_template('results.html', results=results, session_id=session_id,
-                           current_time=datetime.now(), timedelta_24h=timedelta(days=1))
+                           current_time=datetime.now(), timedelta_24h=timedelta(days=1),
+                           slivka_url=SLIVKA_URL)
 
 
 if __name__ == '__main__':
